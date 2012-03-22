@@ -10,19 +10,25 @@ class GitosisObserver < ActiveRecord::Observer
 #    end
 #  end
   
-  def after_save(object) ; update_repositories(object) ; end
-  def after_destroy(object) ; update_repositories(object) ; end
+  def after_save(object)
+    do_repositories_update(object)
+  end
+  def after_destroy(object)
+    do_repositories_update(object)
+  end
   
   protected
   
-  def update_repositories(object)
+  def do_repositories_update(object)
+
     case object
-      when Project then Gitosis::update_repositories(object)
-      when Repository then Gitosis::update_repositories(object.project)
-      when User then Gitosis::update_repositories(object.projects)
-      when GitosisPublicKey then Gitosis::update_repositories(object.user.projects)
-      when Member then Gitosis::update_repositories(object.project)
-      when Role then Gitosis::update_repositories(object.members.map(&:project).uniq.compact)
+      #Enqueue the GitosisJob based on the Object type
+      when Project then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.id)
+      when Repository then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.project.id)
+      when User then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.projects.collect {|p| p.id})
+      when GitosisPublicKey then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.user.projects.collect {|p| p.id})
+      when Member then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.project.id)
+      when Role then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.members.map(&:project).uniq.compact.collect {|p| p.id})
     end
   end
   

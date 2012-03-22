@@ -12,6 +12,8 @@ inifile
 
 net-ssh
 
+delayed_job
+
 
 == Copyright & License
 
