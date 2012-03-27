@@ -1,7 +1,6 @@
 require 'lockfile'
 require 'inifile'
 require 'net/ssh'
-require 'thread'
 
 module Gitosis
   #initialize the directory location of gitosis-admin repository
