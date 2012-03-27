@@ -20,7 +20,6 @@ class GitosisObserver < ActiveRecord::Observer
   protected
   
   def do_repositories_update(object)
-
     case object
       #Enqueue the GitosisJob based on the Object type
       when Project then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.id)
@@ -29,7 +28,8 @@ class GitosisObserver < ActiveRecord::Observer
       when GitosisPublicKey then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.user.projects.collect {|p| p.id})
       when Member then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.project.id)
       when Role then Delayed::Job.enqueue Gitosis::GitosisJob.new(object.members.map(&:project).uniq.compact.collect {|p| p.id})
+      else
+        Rails.logger.error "Unhandled observed Model type: " + object.class.name
     end
   end
-  
 end
