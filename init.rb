@@ -1,4 +1,5 @@
 require 'redmine'
+require 'dispatcher'
 require_dependency 'principal'
 require_dependency 'user'
 
@@ -35,5 +36,21 @@ end
 # initialize association from user -> public keys
 User.send(:has_many, :gitosis_public_keys, :dependent => :destroy)
 
-# initialize observer
-ActiveRecord::Base.observers = ActiveRecord::Base.observers << GitosisObserver
+Dispatcher.to_prepare :redmine_gitosis do
+  # apply GitAdapter patch
+  unless Redmine::Scm::Adapters::GitAdapter.include?(Gitosis::Patches::GitAdapterPatch)
+    Redmine::Scm::Adapters::GitAdapter.send(:include, Gitosis::Patches::GitAdapterPatch)
+  end
+  # apply RepositoriesController patch
+  unless RepositoriesController.include?(Gitosis::Patches::RepositoriesControllerPatch)
+    RepositoriesController.send(:include, Gitosis::Patches::RepositoriesControllerPatch)
+  end
+  # apply RepositoriesHelper patch
+  unless RepositoriesHelper.include?(Gitosis::Patches::RepositoriesHelperPatch)
+    RepositoriesHelper.send(:include, Gitosis::Patches::RepositoriesHelperPatch)
+  end
+  # initialize observer
+  unless ActiveRecord::Base.observers.include?(GitosisObserver) || File.basename($0) == 'rake'
+    ActiveRecord::Base.observers = ActiveRecord::Base.observers << GitosisObserver
+  end
+end

@@ -14,4 +14,3 @@ module Gitosis
     end
   end
 end
-RepositoriesHelper.send(:include, Gitosis::Patches::RepositoriesHelperPatch) unless RepositoriesHelper.include?(Gitosis::Patches::RepositoriesHelperPatch)

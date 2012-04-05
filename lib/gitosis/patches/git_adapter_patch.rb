@@ -137,4 +137,4 @@ module Gitosis
     end
   end
 end
-Redmine::Scm::Adapters::GitAdapter.send(:include, Gitosis::Patches::GitAdapterPatch) unless Redmine::Scm::Adapters::GitAdapter.include?(Gitosis::Patches::GitAdapterPatch)
+
