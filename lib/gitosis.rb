@@ -1,6 +1,7 @@
 require 'lockfile'
 require 'inifile'
 require 'net/ssh'
+require 'digest/md5'
 
 module Gitosis
   #initialize the directory location of gitosis-admin repository
@@ -39,7 +40,7 @@ module Gitosis
     end
     self.initialize_gitosis_repository()
 
-    `cd #{@local_dir} ; git pull`
+    `cd #@local_dir ;env GIT_SSH='#@ssh_id_file' git pull`
 
     #track changes
 		changes = Array.new
@@ -96,11 +97,11 @@ module Gitosis
       # add, commit, push, and remove local tmp dir
       changes.unshift "Updated by Redmine Gitosis"
       commit_message = changes.join("\n")
-      `cd #{@local_dir} ; git add keydir/* gitosis.conf`
-      `cd #{@local_dir} ; git config user.email '#{Setting.mail_from}'`
-      `cd #{@local_dir} ; git config user.name 'Redmine'`
-      `cd #{@local_dir} ; git commit -a -m '#{commit_message}'`
-      `cd #{@local_dir} ; git push`
+      `cd #@local_dir ; env GIT_SSH='#@ssh_id_file' git add keydir/* gitosis.conf`
+      `cd #@local_dir ; env GIT_SSH='#@ssh_id_file' git config user.email '#{Setting.mail_from}'`
+      `cd #@local_dir ; env GIT_SSH='#@ssh_id_file' git config user.name 'Redmine'`
+      `cd #@local_dir ; env GIT_SSH='#@ssh_id_file' git commit -a -m '#{commit_message}'`
+      `cd #@local_dir ; env GIT_SSH='#@ssh_id_file' git push`
     end
 
     lockfile.flock(File::LOCK_UN)
@@ -112,7 +113,16 @@ module Gitosis
   # if force_clone is true current repository will be removed and re-cloned
   # @param force_clone [boolean]
   def self.initialize_gitosis_repository(force_clone = false)
-    @local_dir = File.join(RAILS_ROOT,"tmp","gitosis_admin")
+    @tmp_dir = File.join(RAILS_ROOT,"tmp")
+    @local_dir = File.join(@tmp_dir,"gitosis_admin")
+    @ssh_id_file = File.join(@tmp_dir,'ssh_' + Digest::MD5.hexdigest(Setting.plugin_redmine_gitosis['gitosisIdentityFile']) + ".sh")
+    unless File.exist? (@ssh_id_file)
+      File.open(@ssh_id_file, "w") do |f|
+        f.puts "#!/bin/bash"
+        f.puts "exec ssh -o stricthostkeychecking=no -i #{Setting.plugin_redmine_gitosis['gitosisIdentityFile']} \"$@\""
+      end
+      File.chmod(0755, @ssh_id_file)
+    end
 
     if File.exist? (@local_dir)
       Rails.logger.debug "Gitosis - gitosis_admin exist"
@@ -126,7 +136,7 @@ module Gitosis
     end
 
     # clone repo
-    Rails.logger.info  "Gitosis - running: " + "env GIT_SSH='ssh -o stricthostkeychecking=no -i #{Setting.plugin_redmine_gitosis["gitosisIdentityFile"]}' git clone #{Setting.plugin_redmine_gitosis['gitosisUrl']} #{@local_dir}"
-    `env GIT_SSH='ssh -o stricthostkeychecking=no -i #{Setting.plugin_redmine_gitosis["gitosisIdentityFile"]}' git clone #{Setting.plugin_redmine_gitosis['gitosisUrl']} #{@local_dir}`
+    Rails.logger.info  "Gitosis - running: " + "env GIT_SSH='#@ssh_id_file' git clone #{Setting.plugin_redmine_gitosis['gitosisUrl']} #@local_dir"
+    `env GIT_SSH='#@ssh_id_file' git clone #{Setting.plugin_redmine_gitosis['gitosisUrl']} #@local_dir`
   end
 end
