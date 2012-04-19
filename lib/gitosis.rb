@@ -126,7 +126,7 @@ module Gitosis
     end
 
     # clone repo
-    Rails.logger.notice "Gitosis - running: " + "env GIT_SSH='ssh -o stricthostkeychecking=no -i #{Setting.plugin_redmine_gitosis["gitosisIdentityFile"]}' git clone #{Setting.plugin_redmine_gitosis['gitosisUrl']} #{@local_dir}"
+    Rails.logger.info  "Gitosis - running: " + "env GIT_SSH='ssh -o stricthostkeychecking=no -i #{Setting.plugin_redmine_gitosis["gitosisIdentityFile"]}' git clone #{Setting.plugin_redmine_gitosis['gitosisUrl']} #{@local_dir}"
     `env GIT_SSH='ssh -o stricthostkeychecking=no -i #{Setting.plugin_redmine_gitosis["gitosisIdentityFile"]}' git clone #{Setting.plugin_redmine_gitosis['gitosisUrl']} #{@local_dir}`
   end
 end
