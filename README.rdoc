@@ -20,3 +20,32 @@ delayed_job
 Copyright (c) 2009-2010 Jan Schulz-Hofen, ROCKET RENTALS GmbH (http://www.rocket-rentals.de). MIT License.
 
 Copyright (c) 2010 Eric Bishop (ericpaulbishop@gmail.com) MIT License.
+
+Requires the delayed_job gem v=2.0.7
+    
+    To install: gem install delayed_job -v'=2.0.7'
+    
+    Following configurations are needed:
+    Add to config/additional_environment.rb
+       config.gem 'delayed_job', :version => '~>2.0.7'
+       config.active_record.observers = :gitosis_observer
+    
+    If redmine Gemfile present add:
+       gem 'delayed_job','~> 2.0.7'
+    
+    To setup:
+    Active Record: (for other setups or documentation see: http://rubydoc.info/gems/delaye
+       script/generate delayed_job
+       rake db:migrate
+    
+    Start delayed_job daemon:
+       RAILS_ENV=production script/delayed_job start
+    
+    You should only use a single worker to prevent possible collisions in updating gitosis
+    
+    To add configuration options add to config/initializers/delayed_job_config.rb
+    examples: (Not required)
+       Delayed::Worker.destroy_failed_jobs = false
+       Delayed::Worker.sleep_delay = 60
+       Delayed::Worker.max_attempts = 3
+       Delayed::Worker.max_run_time = 5.minutes

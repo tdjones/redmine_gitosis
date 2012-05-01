@@ -1,5 +1,5 @@
 class GitosisObserver < ActiveRecord::Observer
-  observe :project, :user, :gitosis_public_key, :member, :role, :repository
+  observe :project, :user, :gitosis_public_key, :member, :role
   
   
 #  def before_create(object)
